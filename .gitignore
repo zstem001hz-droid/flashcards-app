@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# TypeScript compiled output
+dist/
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# TypeScript cache
+*.tsbuildinfo
