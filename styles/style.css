@@ -863,7 +863,7 @@ strong {
   }
 
   .study-card {
-    min-height: 250px;
+    max-width: 220px;
   }
 }
 
