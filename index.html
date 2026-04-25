@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Felt - Texas Hold'em Flashcards</title>
+    <link rel="stylesheet" href="styles/style.css" />
+    <script defer src="scripts/app.js"></script>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="app-header">
+      <h1>The Felt - Texas Hold'em Flashcards</h1>
+      <button id="new-deck-btn" class="btn btn-primary">New Deck</button>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="app-container">
+      <!-- Sidebar: Deck List -->
+      <aside class="deck-sidebar">
+        <nav class="deck-nav">
+          <h2>♠️ ♥️ Decks ♣️ ♦️</h2>
+          <ul id="deck-list" class="deck-list">
+            <!-- Decks will be inserted here -->
+          </ul>
+          <div id="empty-decks-message" class="empty-state">
+            <p>🃏 No decks yet. Shuffle one to get started! 🃏</p>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main Study Area -->
+      <main class="study-area">
+        <!-- Toolbar: Search & Controls -->
+        <div class="study-toolbar">
+          <div class="search-container">
+            <input
+              type="text"
+              id="search-input"
+              class="search-input"
+              placeholder="Search cards..."
+              aria-label="Search cards in active deck"
+            />
+          </div>
+          <div class="toolbar-controls">
+            <button
+              id="shuffle-btn"
+              class="btn btn-secondary"
+              aria-label="Shuffle cards"
+            >
+              Shuffle
+            </button>
+
+            <button
+              id="new-card-btn"
+              class="btn btn-primary"
+              aria-label="Add new card"
+            >
+              New Card
+            </button>
+          </div>
+        </div>
+
+        <!-- Card Display Area -->
+        <article class="card-display">
+          <div id="no-deck-message" class="empty-state">
+            <h3>Select a deck to begin studying</h3>
+            <p>Choose a deck from the sidebar or create a new one.</p>
+          </div>
+
+          <div id="no-cards-message" class="empty-state hidden">
+            <h3>No cards in this deck</h3>
+            <p>Add cards to get started studying!</p>
+          </div>
+
+          <div id="card-container" class="card-container hidden">
+            <div class="card-wrapper">
+              <div id="study-card" class="study-card" aria-label="Study card">
+                <div class="card-content">
+                  <p id="card-text">Select a deck to begin</p>
+                </div>
+                <p class="card-indicator">
+                  <span id="card-index">0</span> /
+                  <span id="card-total">0</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Navigation & Flip Controls -->
+            <div class="card-controls">
+              <button
+                id="flip-btn"
+                class="btn btn-secondary"
+                aria-label="Flip card"
+              >
+                Flip
+              </button>
+              <button
+                id="prev-btn"
+                class="btn btn-secondary"
+                aria-label="Previous card"
+              >
+                ← Previous
+              </button>
+              <button
+                id="next-btn"
+                class="btn btn-secondary"
+                aria-label="Next card"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </article>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>
+        <strong>Study Tips:</strong> Flip each card to reveal the answer. Use
+        Next/Previous to navigate. Try Shuffle for a new sequence. Click cards
+        in the sidebar to switch decks.
+      </p>
+    </footer>
+
+    <!-- Modals (for future use) -->
+    <div id="modal-overlay" class="modal-overlay hidden"></div>
+    <dialog id="deck-modal" class="modal" aria-labelledby="deck-modal-title">
+      <!-- Modal content will be inserted here -->
+    </dialog>
+    <dialog id="card-modal" class="modal" aria-labelledby="card-modal-title">
+      <!-- Modal content will be inserted here -->
+    </dialog>
+  </body>
+</html>

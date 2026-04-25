@@ -38,6 +38,6 @@ AppState shape:
 ## Deck Content
 This app uses multiple decks focused on Texas Hold'em poker:
 - Deck 1: Hand Rankings & Hierarchy
-- Deck 2: Starting Hand Odds & Hole Card Strategy  
+- Deck 2: Starting Hands, Statistics & Win Probabilities
 - Deck 3: Pot Odds, Outs & Math
 - Deck 4: Position & Table Dynamics
