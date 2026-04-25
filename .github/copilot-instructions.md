@@ -45,3 +45,10 @@ interface AppState {
 - Use LocalStorage for persistence
 - Reset flip state on card navigation
 - All modals must have focus traps and ESC to close
+
+## Deck Content
+This app uses multiple decks focused on Texas Hold'em poker:
+- Deck 1: Hand Rankings & Hierarchy
+- Deck 2: Starting Hand Odds & Hole Card Strategy  
+- Deck 3: Pot Odds, Outs & Math
+- Deck 4: Position & Table Dynamics
