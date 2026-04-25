@@ -1,41 +1,22 @@
 # Flashcards App - Copilot Instructions
 
 ## Project Overview
-A browser-based flashcards study app built with TypeScript, HTML, and CSS.
-Single-page app, no frameworks, no build tools required for the browser.
-TypeScript source in `src/`, compiled output in `dist/`.
+A browser-based flashcards study app built with vanilla JavaScript, HTML, and CSS.
+Single-page app, no frameworks, no build tools required.
+Texas Hold'em poker subject matter across multiple thematic decks.
 
 ## Architecture
-- `src/app.ts` - main application logic
-- `styles/style.css` - all styles
-- `index.html` - single HTML entry point
-- `dist/` - compiled JavaScript output (do not edit manually)
+- `app.js` — main application logic
+- `styles.css` — all styles
+- `index.html` — single HTML entry point
+- No build tools, no frameworks, no compilation step
 
 ## Data Model
-```typescript
-interface Deck {
-  id: string;
-  name: string;
-  createdAt: number;
-}
-
-interface Card {
-  id: string;
-  front: string;
-  back: string;
-  updatedAt: number;
-}
-
-interface AppState {
-  decks: Deck[];
-  cardsByDeckId: Record<string, Card[]>;
-  activeDeckId: string | null;
-  ui: {
-    isModalOpen: boolean;
-    activeCardIndex: number;
-  };
-}
-```
+AppState shape:
+- decks: array of { id, name, createdAt }
+- cardsByDeckId: object keyed by deckId, values are arrays of { id, front, back, updatedAt }
+- activeDeckId: string or null
+- ui: { isModalOpen, activeCardIndex }
 
 ## Conventions
 - Use TypeScript interfaces for all data structures
