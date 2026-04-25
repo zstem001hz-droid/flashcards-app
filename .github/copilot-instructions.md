@@ -6,8 +6,8 @@ Single-page app, no frameworks, no build tools required.
 Texas Hold'em poker subject matter across multiple thematic decks.
 
 ## Architecture
-- `app.js` — main application logic
-- `styles.css` — all styles
+- `scriptsapp.js` — main application logic
+- `styles/style.css` — all styles
 - `index.html` — single HTML entry point
 - No build tools, no frameworks, no compilation step
 
@@ -18,10 +18,18 @@ AppState shape:
 - activeDeckId: string or null
 - ui: { isModalOpen, activeCardIndex }
 
+## Lab Requirements
+- CRUD for decks and cards via modals
+- Study mode: flip, next, previous, shuffle
+- Keyword search within active deck
+- LocalStorage persistence including last active deck
+- Responsive layout, keyboard navigation, basic accessibility
+- Empty states for no decks and no cards
+
 ## Conventions
-- Use TypeScript interfaces for all data structures
+- Use Plain JS (ES6+), no frameworks or libraries
 - Use kebab-case for CSS class names
-- Use camelCase for TypeScript variables and functions
+- Use camelCase for JavaScript variables and functions
 - Use event delegation where possible
 - Use LocalStorage for persistence
 - Reset flip state on card navigation
