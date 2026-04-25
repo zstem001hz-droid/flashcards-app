@@ -139,6 +139,133 @@ function getCardsInDeck(deckId) {
 }
 
 /* ========================================
+   Card CRUD Operations
+   ======================================== */
+
+/**
+ * Create a new card in a deck
+ * @param {string} deckId - Deck ID to add card to
+ * @param {string} front - Card front text
+ * @param {string} back - Card back text
+ * @returns {object} - Created card object
+ */
+function createCard(deckId, front, back) {
+  if (!deckId || !AppState.cardsByDeckId[deckId]) {
+    console.warn(`Deck ${deckId} not found`);
+    return null;
+  }
+
+  if (
+    !front ||
+    front.trim().length === 0 ||
+    !back ||
+    back.trim().length === 0
+  ) {
+    console.warn("Card front and back cannot be empty");
+    return null;
+  }
+
+  const cardId = `card-${Date.now()}`;
+  const newCard = {
+    id: cardId,
+    front: front.trim(),
+    back: back.trim(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  AppState.cardsByDeckId[deckId].push(newCard);
+  AppState.save();
+
+  return newCard;
+}
+
+/**
+ * Edit an existing card
+ * @param {string} deckId - Deck ID
+ * @param {string} cardId - Card ID to edit
+ * @param {string} front - New front text
+ * @param {string} back - New back text
+ * @returns {boolean} - Success status
+ */
+function editCard(deckId, cardId, front, back) {
+  if (!deckId || !AppState.cardsByDeckId[deckId]) {
+    console.warn(`Deck ${deckId} not found`);
+    return false;
+  }
+
+  if (
+    !front ||
+    front.trim().length === 0 ||
+    !back ||
+    back.trim().length === 0
+  ) {
+    console.warn("Card front and back cannot be empty");
+    return false;
+  }
+
+  const card = AppState.cardsByDeckId[deckId].find((c) => c.id === cardId);
+  if (!card) {
+    console.warn(`Card ${cardId} not found`);
+    return false;
+  }
+
+  card.front = front.trim();
+  card.back = back.trim();
+  card.updatedAt = new Date().toISOString();
+  AppState.save();
+
+  return true;
+}
+
+/**
+ * Delete a card from a deck
+ * @param {string} deckId - Deck ID
+ * @param {string} cardId - Card ID to delete
+ * @returns {boolean} - Success status
+ */
+function deleteCard(deckId, cardId) {
+  if (!deckId || !AppState.cardsByDeckId[deckId]) {
+    console.warn(`Deck ${deckId} not found`);
+    return false;
+  }
+
+  const cardIndex = AppState.cardsByDeckId[deckId].findIndex(
+    (c) => c.id === cardId,
+  );
+  if (cardIndex === -1) {
+    console.warn(`Card ${cardId} not found`);
+    return false;
+  }
+
+  AppState.cardsByDeckId[deckId].splice(cardIndex, 1);
+
+  // Adjust active card index if needed
+  if (AppState.ui.activeCardIndex >= AppState.cardsByDeckId[deckId].length) {
+    AppState.ui.activeCardIndex = Math.max(
+      0,
+      AppState.cardsByDeckId[deckId].length - 1,
+    );
+  }
+
+  AppState.save();
+
+  return true;
+}
+
+/**
+ * Get a single card by ID
+ * @param {string} deckId - Deck ID
+ * @param {string} cardId - Card ID
+ * @returns {object|null} - Card object or null
+ */
+function getCard(deckId, cardId) {
+  const cards = AppState.cardsByDeckId[deckId];
+  if (!cards) return null;
+  return cards.find((c) => c.id === cardId) || null;
+}
+
+/* ========================================
    Deck UI Rendering
    ======================================== */
 
@@ -224,8 +351,14 @@ function getActiveDeck() {
 function initEventListeners() {
   const deckListEl = document.getElementById("deck-list");
   const newDeckBtnEl = document.getElementById("new-deck-btn");
+  const newCardBtnEl = document.getElementById("new-card-btn");
   const deckFormEl = document.getElementById("deck-form");
+  const cardFormEl = document.getElementById("card-form");
   const deckModalCancelEl = document.getElementById("deck-modal-cancel");
+  const cardModalCancelEl = document.getElementById("card-modal-cancel");
+  const editCardBtnEl = document.getElementById("edit-card-btn");
+  const deleteCardBtnEl = document.getElementById("delete-card-btn");
+  const cardListEl = document.getElementById("card-list");
 
   // Event delegation on deck list
   if (deckListEl) {
@@ -247,15 +380,86 @@ function initEventListeners() {
     });
   }
 
+  // New card button
+  if (newCardBtnEl) {
+    newCardBtnEl.addEventListener("click", () => {
+      openNewCardModal();
+    });
+  }
+
   // Deck form submission
   if (deckFormEl) {
     deckFormEl.addEventListener("submit", handleDeckFormSubmit);
+  }
+
+  // Card form submission
+  if (cardFormEl) {
+    cardFormEl.addEventListener("submit", handleCardFormSubmit);
   }
 
   // Deck modal cancel button
   if (deckModalCancelEl) {
     deckModalCancelEl.addEventListener("click", () => {
       ModalManager.closeModal();
+    });
+  }
+
+  // Card modal cancel button
+  if (cardModalCancelEl) {
+    cardModalCancelEl.addEventListener("click", () => {
+      ModalManager.closeModal();
+    });
+  }
+
+  // Edit current card button
+  if (editCardBtnEl) {
+    editCardBtnEl.addEventListener("click", () => {
+      const activeDeck = getActiveDeck();
+      if (!activeDeck) return;
+
+      const cards = getCardsInDeck(activeDeck.id);
+      const currentCard = cards[AppState.ui.activeCardIndex];
+      if (currentCard) {
+        openEditCardModal(currentCard.id);
+      }
+    });
+  }
+
+  // Delete current card button
+  if (deleteCardBtnEl) {
+    deleteCardBtnEl.addEventListener("click", () => {
+      const activeDeck = getActiveDeck();
+      if (!activeDeck) return;
+
+      const cards = getCardsInDeck(activeDeck.id);
+      const currentCard = cards[AppState.ui.activeCardIndex];
+      if (currentCard) {
+        deleteCardWithConfirmation(currentCard.id);
+      }
+    });
+  }
+
+  // Event delegation on card list
+  if (cardListEl) {
+    cardListEl.addEventListener("click", (event) => {
+      const editBtn = event.target.closest(".card-edit-btn");
+      const deleteBtn = event.target.closest(".card-delete-btn");
+      const selectBtn = event.target.closest(".card-select-btn");
+
+      if (editBtn) {
+        const cardId = editBtn.dataset.cardId;
+        openEditCardModal(cardId);
+      } else if (deleteBtn) {
+        const cardId = deleteBtn.dataset.cardId;
+        deleteCardWithConfirmation(cardId);
+      } else if (selectBtn) {
+        const cardIndex = parseInt(selectBtn.dataset.cardIndex, 10);
+        AppState.ui.activeCardIndex = cardIndex;
+        AppState.ui.isFlipped = false;
+        AppState.save();
+        renderCard();
+        renderCardList();
+      }
     });
   }
 }
@@ -330,6 +534,58 @@ function renderCard() {
   if (cardTotalEl) {
     cardTotalEl.textContent = cards.length;
   }
+
+  renderCardList();
+}
+
+/**
+ * Render card list
+ */
+function renderCardList() {
+  const activeDeck = getActiveDeck();
+  if (!activeDeck) return;
+
+  const cardListEl = document.getElementById("card-list");
+  if (!cardListEl) return;
+
+  const cards = getCardsInDeck(activeDeck.id);
+  cardListEl.innerHTML = "";
+
+  cards.forEach((card, index) => {
+    const li = document.createElement("li");
+    li.className = "card-list-item";
+
+    if (index === AppState.ui.activeCardIndex) {
+      li.classList.add("active");
+    }
+
+    const cardPreview = document.createElement("button");
+    cardPreview.className = "card-select-btn";
+    cardPreview.dataset.cardIndex = index;
+    cardPreview.textContent = `${index + 1}. ${card.front.substring(0, 50)}${card.front.length > 50 ? "..." : ""}`;
+
+    const controls = document.createElement("div");
+    controls.className = "card-list-controls";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-sm card-edit-btn";
+    editBtn.dataset.cardId = card.id;
+    editBtn.textContent = "Edit";
+    editBtn.type = "button";
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn btn-sm btn-danger card-delete-btn";
+    deleteBtn.dataset.cardId = card.id;
+    deleteBtn.textContent = "Delete";
+    deleteBtn.type = "button";
+
+    controls.appendChild(editBtn);
+    controls.appendChild(deleteBtn);
+
+    li.appendChild(cardPreview);
+    li.appendChild(controls);
+    cardListEl.appendChild(li);
+  });
 }
 
 /* ========================================
@@ -618,6 +874,241 @@ function openDeleteDeckModal(deckId) {
   ) {
     deleteDeck(deckId);
     renderDeckList();
+    updateUIForActiveDeck();
+  }
+}
+
+/* ========================================
+   Card Modal Functions with Form Handling
+   ======================================== */
+
+/**
+ * Validate card front and back input
+ * @param {string} front - Card front text
+ * @param {string} back - Card back text
+ * @returns {object} - { valid: boolean, frontError: string, backError: string }
+ */
+function validateCardInputs(front, back) {
+  const frontTrimmed = front.trim();
+  const backTrimmed = back.trim();
+  let frontError = "";
+  let backError = "";
+
+  if (!frontTrimmed) {
+    frontError = "Front text is required";
+  } else if (frontTrimmed.length < 2) {
+    frontError = "Front text must be at least 2 characters";
+  } else if (frontTrimmed.length > 500) {
+    frontError = "Front text must not exceed 500 characters";
+  }
+
+  if (!backTrimmed) {
+    backError = "Back text is required";
+  } else if (backTrimmed.length < 2) {
+    backError = "Back text must be at least 2 characters";
+  } else if (backTrimmed.length > 500) {
+    backError = "Back text must not exceed 500 characters";
+  }
+
+  return {
+    valid: frontError === "" && backError === "",
+    frontError,
+    backError,
+  };
+}
+
+/**
+ * Show validation errors in card modal
+ */
+function showCardFormError(frontError, backError) {
+  const frontErrorEl = document.getElementById("card-front-error");
+  const backErrorEl = document.getElementById("card-back-error");
+  const frontInputEl = document.getElementById("card-front-input");
+  const backInputEl = document.getElementById("card-back-input");
+
+  if (frontErrorEl && frontError) {
+    frontErrorEl.textContent = frontError;
+    frontErrorEl.classList.remove("hidden");
+  }
+
+  if (backErrorEl && backError) {
+    backErrorEl.textContent = backError;
+    backErrorEl.classList.remove("hidden");
+  }
+
+  if (frontInputEl && frontError) {
+    frontInputEl.setAttribute("aria-invalid", "true");
+  }
+
+  if (backInputEl && backError) {
+    backInputEl.setAttribute("aria-invalid", "true");
+  }
+}
+
+/**
+ * Clear validation errors in card modal
+ */
+function clearCardFormError() {
+  const frontErrorEl = document.getElementById("card-front-error");
+  const backErrorEl = document.getElementById("card-back-error");
+  const frontInputEl = document.getElementById("card-front-input");
+  const backInputEl = document.getElementById("card-back-input");
+
+  if (frontErrorEl) {
+    frontErrorEl.textContent = "";
+    frontErrorEl.classList.add("hidden");
+  }
+
+  if (backErrorEl) {
+    backErrorEl.textContent = "";
+    backErrorEl.classList.add("hidden");
+  }
+
+  if (frontInputEl) {
+    frontInputEl.setAttribute("aria-invalid", "false");
+  }
+
+  if (backInputEl) {
+    backInputEl.setAttribute("aria-invalid", "false");
+  }
+}
+
+/**
+ * Reset card form
+ */
+function resetCardForm() {
+  const form = document.getElementById("card-form");
+  const titleEl = document.getElementById("card-modal-title");
+  const submitBtn = document.querySelector("#card-form button[type='submit']");
+
+  if (form) {
+    form.reset();
+  }
+
+  clearCardFormError();
+
+  if (titleEl) {
+    titleEl.textContent = "Add Card";
+  }
+
+  if (submitBtn) {
+    submitBtn.textContent = "Add Card";
+  }
+
+  ModalManager.currentContext = null;
+}
+
+/**
+ * Open new card modal
+ */
+function openNewCardModal() {
+  if (!getActiveDeck()) {
+    alert("Please select a deck first");
+    return;
+  }
+
+  resetCardForm();
+  const modal = document.getElementById("card-modal");
+  if (modal) {
+    ModalManager.openModal(modal);
+  }
+}
+
+/**
+ * Open edit card modal
+ * @param {string} cardId - Card ID to edit
+ */
+function openEditCardModal(cardId) {
+  const activeDeck = getActiveDeck();
+  if (!activeDeck) return;
+
+  const card = getCard(activeDeck.id, cardId);
+  if (!card) return;
+
+  resetCardForm();
+
+  const titleEl = document.getElementById("card-modal-title");
+  const frontInputEl = document.getElementById("card-front-input");
+  const backInputEl = document.getElementById("card-back-input");
+  const submitBtn = document.querySelector("#card-form button[type='submit']");
+
+  if (titleEl) {
+    titleEl.textContent = "Edit Card";
+  }
+
+  if (frontInputEl) {
+    frontInputEl.value = card.front;
+  }
+
+  if (backInputEl) {
+    backInputEl.value = card.back;
+  }
+
+  if (submitBtn) {
+    submitBtn.textContent = "Save Card";
+  }
+
+  ModalManager.currentContext = { cardId };
+
+  const modal = document.getElementById("card-modal");
+  if (modal) {
+    ModalManager.openModal(modal);
+  }
+}
+
+/**
+ * Handle card form submission
+ */
+function handleCardFormSubmit(e) {
+  e.preventDefault();
+
+  const activeDeck = getActiveDeck();
+  if (!activeDeck) {
+    alert("No active deck");
+    return;
+  }
+
+  const frontInputEl = document.getElementById("card-front-input");
+  const backInputEl = document.getElementById("card-back-input");
+  const front = frontInputEl.value;
+  const back = backInputEl.value;
+
+  // Validate
+  const validation = validateCardInputs(front, back);
+  if (!validation.valid) {
+    showCardFormError(validation.frontError, validation.backError);
+    return;
+  }
+
+  clearCardFormError();
+
+  // Create or update card
+  if (ModalManager.currentContext?.cardId) {
+    // Edit mode
+    const cardId = ModalManager.currentContext.cardId;
+    editCard(activeDeck.id, cardId, front, back);
+  } else {
+    // Create mode
+    createCard(activeDeck.id, front, back);
+  }
+
+  renderCard();
+  ModalManager.closeModal();
+}
+
+/**
+ * Delete a card with confirmation
+ * @param {string} cardId - Card ID to delete
+ */
+function deleteCardWithConfirmation(cardId) {
+  const activeDeck = getActiveDeck();
+  if (!activeDeck) return;
+
+  const card = getCard(activeDeck.id, cardId);
+  if (!card) return;
+
+  if (confirm("Delete this card? This action cannot be undone.")) {
+    deleteCard(activeDeck.id, cardId);
     updateUIForActiveDeck();
   }
 }

@@ -110,6 +110,32 @@
                 Next →
               </button>
             </div>
+
+            <!-- Card Management Controls -->
+            <div class="card-management">
+              <button
+                id="edit-card-btn"
+                class="btn btn-secondary"
+                aria-label="Edit card"
+              >
+                ✎ Edit
+              </button>
+              <button
+                id="delete-card-btn"
+                class="btn btn-secondary btn-danger"
+                aria-label="Delete card"
+              >
+                ✕ Delete
+              </button>
+            </div>
+
+            <!-- Card List -->
+            <div class="card-list-section">
+              <h3>Cards in Deck</h3>
+              <ul id="card-list" class="card-list">
+                <!-- Cards will be rendered here -->
+              </ul>
+            </div>
           </div>
         </article>
       </main>
@@ -140,11 +166,71 @@
               aria-required="true"
               maxlength="100"
             />
-            <span id="deck-name-error" class="form-error hidden" role="alert"></span>
+            <span
+              id="deck-name-error"
+              class="form-error hidden"
+              role="alert"
+            ></span>
           </div>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">Create</button>
-            <button type="button" id="deck-modal-cancel" class="btn btn-secondary">
+            <button
+              type="button"
+              id="deck-modal-cancel"
+              class="btn btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog id="card-modal" class="modal" aria-labelledby="card-modal-title">
+      <div class="modal-content">
+        <h2 id="card-modal-title">Add Card</h2>
+        <form id="card-form" class="modal-form">
+          <div class="form-group">
+            <label for="card-front-input">Front (Question/Prompt)</label>
+            <textarea
+              id="card-front-input"
+              class="form-input form-textarea"
+              placeholder="e.g., What is a flush?"
+              required
+              aria-required="true"
+              maxlength="500"
+              rows="3"
+            ></textarea>
+            <span
+              id="card-front-error"
+              class="form-error hidden"
+              role="alert"
+            ></span>
+          </div>
+          <div class="form-group">
+            <label for="card-back-input">Back (Answer)</label>
+            <textarea
+              id="card-back-input"
+              class="form-input form-textarea"
+              placeholder="e.g., Five cards of the same suit in sequence."
+              required
+              aria-required="true"
+              maxlength="500"
+              rows="3"
+            ></textarea>
+            <span
+              id="card-back-error"
+              class="form-error hidden"
+              role="alert"
+            ></span>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Card</button>
+            <button
+              type="button"
+              id="card-modal-cancel"
+              class="btn btn-secondary"
+            >
               Cancel
             </button>
           </div>
