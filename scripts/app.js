@@ -224,6 +224,8 @@ function getActiveDeck() {
 function initEventListeners() {
   const deckListEl = document.getElementById("deck-list");
   const newDeckBtnEl = document.getElementById("new-deck-btn");
+  const deckFormEl = document.getElementById("deck-form");
+  const deckModalCancelEl = document.getElementById("deck-modal-cancel");
 
   // Event delegation on deck list
   if (deckListEl) {
@@ -242,6 +244,18 @@ function initEventListeners() {
   if (newDeckBtnEl) {
     newDeckBtnEl.addEventListener("click", () => {
       openNewDeckModal();
+    });
+  }
+
+  // Deck form submission
+  if (deckFormEl) {
+    deckFormEl.addEventListener("submit", handleDeckFormSubmit);
+  }
+
+  // Deck modal cancel button
+  if (deckModalCancelEl) {
+    deckModalCancelEl.addEventListener("click", () => {
+      ModalManager.closeModal();
     });
   }
 }
@@ -319,49 +333,289 @@ function renderCard() {
 }
 
 /* ========================================
-   Modal Functions (Placeholder)
+   Modal Management with Accessibility
+   ======================================== */
+
+const ModalManager = {
+  activeModal: null,
+  focusBeforeOpen: null,
+  currentContext: null, // Store modal context (deckId, etc.)
+
+  /**
+   * Get all focusable elements within a modal
+   */
+  getFocusableElements(modal) {
+    const selector =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    return modal.querySelectorAll(selector);
+  },
+
+  /**
+   * Create focus trap - keep focus within modal
+   */
+  trapFocus(e, modal) {
+    const focusables = this.getFocusableElements(modal);
+    const firstFocusable = focusables[0];
+    const lastFocusable = focusables[focusables.length - 1];
+
+    if (e.key !== "Tab") return;
+
+    if (e.shiftKey) {
+      // Shift + Tab
+      if (document.activeElement === firstFocusable) {
+        e.preventDefault();
+        lastFocusable.focus();
+      }
+    } else {
+      // Tab
+      if (document.activeElement === lastFocusable) {
+        e.preventDefault();
+        firstFocusable.focus();
+      }
+    }
+  },
+
+  /**
+   * Handle ESC key to close modal
+   */
+  handleEscKey(e) {
+    if (e.key === "Escape" && this.activeModal) {
+      this.closeModal();
+    }
+  },
+
+  /**
+   * Open a modal with focus management
+   */
+  openModal(modal) {
+    if (this.activeModal) {
+      this.closeModal();
+    }
+
+    this.activeModal = modal;
+    this.focusBeforeOpen = document.activeElement;
+
+    // Open the dialog
+    modal.showModal();
+
+    // Set focus to first focusable element
+    const focusables = this.getFocusableElements(modal);
+    if (focusables.length > 0) {
+      focusables[0].focus();
+    }
+
+    // Add event listeners
+    modal.addEventListener("keydown", (e) => this.trapFocus(e, modal));
+    document.addEventListener("keydown", this.handleEscKey.bind(this));
+  },
+
+  /**
+   * Close modal and return focus
+   */
+  closeModal() {
+    if (!this.activeModal) return;
+
+    const modal = this.activeModal;
+    modal.close();
+    this.activeModal = null;
+    this.currentContext = null;
+
+    // Return focus to the element that opened the modal
+    if (this.focusBeforeOpen && this.focusBeforeOpen.focus) {
+      this.focusBeforeOpen.focus();
+    }
+
+    // Remove event listeners
+    document.removeEventListener("keydown", this.handleEscKey.bind(this));
+  },
+};
+
+/* ========================================
+   Deck Modal Functions with Form Handling
    ======================================== */
 
 /**
+ * Validate deck name input
+ * @param {string} name - Deck name to validate
+ * @returns {object} - { valid: boolean, message: string }
+ */
+function validateDeckName(name) {
+  const trimmed = name.trim();
+
+  if (!trimmed) {
+    return { valid: false, message: "Deck name is required" };
+  }
+
+  if (trimmed.length < 2) {
+    return { valid: false, message: "Deck name must be at least 2 characters" };
+  }
+
+  if (trimmed.length > 100) {
+    return {
+      valid: false,
+      message: "Deck name must not exceed 100 characters",
+    };
+  }
+
+  // Check for duplicate names
+  const isDuplicate = AppState.decks.some(
+    (deck) =>
+      deck.name.toLowerCase() === trimmed.toLowerCase() &&
+      deck.id !== ModalManager.currentContext?.deckId,
+  );
+
+  if (isDuplicate) {
+    return { valid: false, message: "A deck with this name already exists" };
+  }
+
+  return { valid: true, message: "" };
+}
+
+/**
+ * Show validation error in modal
+ */
+function showDeckFormError(message) {
+  const errorEl = document.getElementById("deck-name-error");
+  const inputEl = document.getElementById("deck-name-input");
+
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.classList.remove("hidden");
+  }
+
+  if (inputEl) {
+    inputEl.setAttribute("aria-invalid", "true");
+  }
+}
+
+/**
+ * Clear validation error in modal
+ */
+function clearDeckFormError() {
+  const errorEl = document.getElementById("deck-name-error");
+  const inputEl = document.getElementById("deck-name-input");
+
+  if (errorEl) {
+    errorEl.textContent = "";
+    errorEl.classList.add("hidden");
+  }
+
+  if (inputEl) {
+    inputEl.setAttribute("aria-invalid", "false");
+  }
+}
+
+/**
+ * Reset deck form
+ */
+function resetDeckForm() {
+  const form = document.getElementById("deck-form");
+  const titleEl = document.getElementById("deck-modal-title");
+
+  if (form) {
+    form.reset();
+  }
+
+  clearDeckFormError();
+
+  if (titleEl) {
+    titleEl.textContent = "Create Deck";
+  }
+
+  ModalManager.currentContext = null;
+}
+
+/**
  * Open new deck modal
- * TODO: Implement modal with form submission
  */
 function openNewDeckModal() {
-  const deckName = prompt("Enter deck name:");
-  if (deckName) {
-    const newDeck = createDeck(deckName);
-    if (newDeck) {
-      setActiveDeck(newDeck.id);
-      renderDeckList();
-      updateUIForActiveDeck();
-    }
+  resetDeckForm();
+  const modal = document.getElementById("deck-modal");
+  if (modal) {
+    ModalManager.openModal(modal);
   }
 }
 
 /**
  * Open edit deck modal
- * TODO: Implement modal with form submission
+ * @param {string} deckId - Deck ID to edit
  */
 function openEditDeckModal(deckId) {
   const deck = getDeck(deckId);
   if (!deck) return;
 
-  const newName = prompt("Enter new deck name:", deck.name);
-  if (newName && newName !== deck.name) {
-    editDeck(deckId, newName);
-    renderDeckList();
+  resetDeckForm();
+
+  const titleEl = document.getElementById("deck-modal-title");
+  const inputEl = document.getElementById("deck-name-input");
+
+  if (titleEl) {
+    titleEl.textContent = "Edit Deck";
+  }
+
+  if (inputEl) {
+    inputEl.value = deck.name;
+  }
+
+  ModalManager.currentContext = { deckId };
+
+  const modal = document.getElementById("deck-modal");
+  if (modal) {
+    ModalManager.openModal(modal);
   }
 }
 
 /**
+ * Handle deck form submission
+ */
+function handleDeckFormSubmit(e) {
+  e.preventDefault();
+
+  const inputEl = document.getElementById("deck-name-input");
+  const deckName = inputEl.value;
+
+  // Validate
+  const validation = validateDeckName(deckName);
+  if (!validation.valid) {
+    showDeckFormError(validation.message);
+    return;
+  }
+
+  clearDeckFormError();
+
+  // Create or update deck
+  if (ModalManager.currentContext?.deckId) {
+    // Edit mode
+    const deckId = ModalManager.currentContext.deckId;
+    editDeck(deckId, deckName);
+  } else {
+    // Create mode
+    createDeck(deckName);
+  }
+
+  renderDeckList();
+  setActiveDeck(
+    ModalManager.currentContext?.deckId ||
+      AppState.decks[AppState.decks.length - 1].id,
+  );
+  updateUIForActiveDeck();
+
+  ModalManager.closeModal();
+}
+
+/**
  * Open delete confirmation modal
- * TODO: Implement modal with confirmation
+ * @param {string} deckId - Deck ID to delete
  */
 function openDeleteDeckModal(deckId) {
   const deck = getDeck(deckId);
   if (!deck) return;
 
-  if (confirm(`Delete deck "${deck.name}"? This cannot be undone.`)) {
+  if (
+    confirm(
+      `Delete deck "${deck.name}"? This action cannot be undone, and all ${getCardsInDeck(deckId).length} cards will be deleted.`,
+    )
+  ) {
     deleteDeck(deckId);
     renderDeckList();
     updateUIForActiveDeck();

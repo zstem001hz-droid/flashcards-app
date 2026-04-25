@@ -124,13 +124,32 @@
       </p>
     </footer>
 
-    <!-- Modals (for future use) -->
-    <div id="modal-overlay" class="modal-overlay hidden"></div>
+    <!-- Modals -->
     <dialog id="deck-modal" class="modal" aria-labelledby="deck-modal-title">
-      <!-- Modal content will be inserted here -->
-    </dialog>
-    <dialog id="card-modal" class="modal" aria-labelledby="card-modal-title">
-      <!-- Modal content will be inserted here -->
+      <div class="modal-content">
+        <h2 id="deck-modal-title">Create Deck</h2>
+        <form id="deck-form" class="modal-form">
+          <div class="form-group">
+            <label for="deck-name-input">Deck Name</label>
+            <input
+              type="text"
+              id="deck-name-input"
+              class="form-input"
+              placeholder="e.g., Hand Rankings"
+              required
+              aria-required="true"
+              maxlength="100"
+            />
+            <span id="deck-name-error" class="form-error hidden" role="alert"></span>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" id="deck-modal-cancel" class="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </dialog>
   </body>
 </html>
