@@ -462,6 +462,30 @@ function initEventListeners() {
       }
     });
   }
+
+  // Flip button
+  const flipBtnEl = document.getElementById("flip-btn");
+  if (flipBtnEl) {
+    flipBtnEl.addEventListener("click", () => {
+      StudyMode.flipCard();
+    });
+  }
+
+  // Previous button
+  const prevBtnEl = document.getElementById("prev-btn");
+  if (prevBtnEl) {
+    prevBtnEl.addEventListener("click", () => {
+      StudyMode.previousCard();
+    });
+  }
+
+  // Next button
+  const nextBtnEl = document.getElementById("next-btn");
+  if (nextBtnEl) {
+    nextBtnEl.addEventListener("click", () => {
+      StudyMode.nextCard();
+    });
+  }
 }
 
 /**
@@ -474,6 +498,11 @@ function updateUIForActiveDeck() {
 
   const activeDeck = getActiveDeck();
   const cards = activeDeck ? getCardsInDeck(activeDeck.id) : [];
+
+  // Exit study mode when leaving cards
+  if (StudyMode.isActive) {
+    StudyMode.exit();
+  }
 
   if (!activeDeck) {
     // No deck selected
@@ -492,11 +521,11 @@ function updateUIForActiveDeck() {
     return;
   }
 
-  // Show cards
+  // Show cards and enter study mode
   noCardsMessageEl?.classList.add("hidden");
   cardContainerEl?.classList.remove("hidden");
 
-  renderCard();
+  StudyMode.enter();
 }
 
 /* ========================================
@@ -587,6 +616,129 @@ function renderCardList() {
     cardListEl.appendChild(li);
   });
 }
+
+/* ========================================
+   Study Mode - Card Navigation & Interaction
+   ======================================== */
+
+const StudyMode = {
+  isActive: false,
+  keyboardListener: null,
+
+  /**
+   * Enter study mode and set up event listeners
+   */
+  enter() {
+    this.isActive = true;
+
+    // Render initial card
+    renderCard();
+
+    // Create and store keyboard listener
+    this.keyboardListener = (e) => this.handleKeyboard(e);
+    document.addEventListener("keydown", this.keyboardListener);
+  },
+
+  /**
+   * Exit study mode and clean up listeners
+   */
+  exit() {
+    this.isActive = false;
+
+    // Remove keyboard listener
+    if (this.keyboardListener) {
+      document.removeEventListener("keydown", this.keyboardListener);
+      this.keyboardListener = null;
+    }
+  },
+
+  /**
+   * Handle keyboard shortcuts
+   */
+  handleKeyboard(e) {
+    const activeDeck = getActiveDeck();
+    if (!activeDeck || !this.isActive) return;
+
+    switch (e.key) {
+      case " ":
+        // Space to flip
+        e.preventDefault();
+        this.flipCard();
+        break;
+      case "ArrowLeft":
+        // Left arrow to go to previous card
+        e.preventDefault();
+        this.previousCard();
+        break;
+      case "ArrowRight":
+        // Right arrow to go to next card
+        e.preventDefault();
+        this.nextCard();
+        break;
+    }
+  },
+
+  /**
+   * Toggle card flip state
+   */
+  flipCard() {
+    AppState.ui.isFlipped = !AppState.ui.isFlipped;
+    AppState.save();
+
+    const card = document.getElementById("study-card");
+    if (card) {
+      if (AppState.ui.isFlipped) {
+        card.classList.add("is-flipped");
+      } else {
+        card.classList.remove("is-flipped");
+      }
+    }
+
+    renderCard();
+  },
+
+  /**
+   * Navigate to previous card with boundary check
+   */
+  previousCard() {
+    const activeDeck = getActiveDeck();
+    if (!activeDeck) return;
+
+    const cards = getCardsInDeck(activeDeck.id);
+    if (cards.length === 0) return;
+
+    // Boundary check: don't go below 0
+    if (AppState.ui.activeCardIndex > 0) {
+      AppState.ui.activeCardIndex--;
+    }
+
+    // Reset flip state on navigation
+    AppState.ui.isFlipped = false;
+    AppState.save();
+    renderCard();
+  },
+
+  /**
+   * Navigate to next card with boundary check
+   */
+  nextCard() {
+    const activeDeck = getActiveDeck();
+    if (!activeDeck) return;
+
+    const cards = getCardsInDeck(activeDeck.id);
+    if (cards.length === 0) return;
+
+    // Boundary check: don't go beyond last card
+    if (AppState.ui.activeCardIndex < cards.length - 1) {
+      AppState.ui.activeCardIndex++;
+    }
+
+    // Reset flip state on navigation
+    AppState.ui.isFlipped = false;
+    AppState.save();
+    renderCard();
+  },
+};
 
 /* ========================================
    Modal Management with Accessibility
