@@ -424,26 +424,15 @@ strong {
   width: 100%;
   max-width: 300px;
   aspect-ratio: 2.5 / 3.5;
-  background-color: #ffffff;
-  border: 2px solid #c41e3a;
-  border-radius: 12px;
-  box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   cursor: pointer;
+  transform-style: preserve-3d;
   transition:
     transform var(--transition-base),
     box-shadow var(--transition-base);
-  overflow: hidden;
   font-family: "Georgia", serif;
 }
 
 .study-card:hover {
-  transform: translateY(-8px);
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.4),
     0 4px 8px rgba(0, 0, 0, 0.2);
@@ -454,14 +443,37 @@ strong {
   outline-offset: var(--focus-outline-offset);
 }
 
-/* Card Face (Front) */
-.study-card.card-face {
-  background-color: #ffffff;
-  padding: 16px;
+/* ========================================
+   Card Face & Back (3D Flip)
+   ======================================== */
+
+.card-face,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* Card Back (Decorative Pattern) */
-.study-card.card-back {
+/* Front face (default visible) */
+.card-face {
+  background-color: #ffffff;
+  border: 2px solid #c41e3a;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 2;
+}
+
+/* Back face (rotated 180 degrees, hidden by default) */
+.card-back {
   background: linear-gradient(
     45deg,
     #c41e3a 0%,
@@ -474,10 +486,15 @@ strong {
     #ffffff 100%
   );
   background-size: 40px 40px;
-  position: relative;
+  border: 2px solid #c41e3a;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: rotateY(180deg);
+  z-index: 1;
 }
 
-.study-card.card-back::before {
+.card-back::before {
   content: "";
   position: absolute;
   inset: 16px;
@@ -498,9 +515,10 @@ strong {
       rgba(196, 30, 58, 0.1) 10px,
       rgba(196, 30, 58, 0.1) 20px
     );
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
-.study-card.card-back::after {
+.card-back::after {
   content: "♠ ♥ ♣ ♦";
   position: absolute;
   top: 50%;
@@ -510,49 +528,12 @@ strong {
   color: rgba(196, 30, 58, 0.3);
   font-weight: bold;
   letter-spacing: 8px;
+  z-index: 1;
 }
 
-/* Corner Indices (using pseudo-elements on card face) */
-.study-card.card-face::before {
-  content: attr(data-rank) " " attr(data-suit);
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-size: 14px;
-  font-weight: bold;
-  line-height: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.study-card.card-face::after {
-  content: attr(data-rank) " " attr(data-suit);
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  font-size: 14px;
-  font-weight: bold;
-  line-height: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  transform: rotate(180deg);
-}
-
-/* Suit-based coloring */
-.study-card[data-suit="♥"],
-.study-card[data-suit="♦"] {
-  color: #c41e3a;
-  border-color: #c41e3a;
-}
-
-.study-card[data-suit="♠"],
-.study-card[data-suit="♣"] {
-  color: #000000;
-  border-color: #000000;
+/* Flipped state - rotate 180 degrees to show back */
+.study-card.is-flipped {
+  transform: rotateY(180deg);
 }
 
 /* Card Content - Main display area */
@@ -589,11 +570,10 @@ strong {
 }
 
 .card-indicator {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
+  position: relative;
+  text-align: center;
+  margin: var(--spacing-md) 0 0 0;
+  padding: 0;
   font-size: var(--font-size-xs);
   color: #999999;
   font-weight: var(--font-weight-medium);

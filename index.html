@@ -76,14 +76,19 @@
           <div id="card-container" class="card-container hidden">
             <div class="card-wrapper">
               <div id="study-card" class="study-card" aria-label="Study card">
-                <div class="card-content">
+                <div class="card-face">
                   <p id="card-text">Select a deck to begin</p>
                 </div>
-                <p class="card-indicator">
-                  <span id="card-index">0</span> /
-                  <span id="card-total">0</span>
-                </p>
+                <div class="card-back">
+                  <div class="card-content">
+                    <p id="card-back-text"></p>
+                  </div>
+                </div>
               </div>
+              <p class="card-indicator">
+                <span id="card-index">0</span> /
+                <span id="card-total">0</span>
+              </p>
             </div>
 
             <!-- Navigation & Flip Controls -->

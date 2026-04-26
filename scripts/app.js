@@ -549,20 +549,35 @@ function renderCard() {
   const cardTextEl = document.getElementById("card-text");
   const cardIndexEl = document.getElementById("card-index");
   const cardTotalEl = document.getElementById("card-total");
+  const studyCardEl = document.getElementById("study-card");
 
   if (cardTextEl) {
-    cardTextEl.textContent = AppState.ui.isFlipped
-      ? currentCard.back
-      : currentCard.front;
+    cardTextEl.textContent = currentCard.front;
   }
 
-  if (cardIndexEl) {
-    cardIndexEl.textContent = currentIndex + 1;
+  const cardBackTextEl = document.getElementById("card-back-text");
+  if (cardBackTextEl) {
+    cardBackTextEl.textContent = currentCard.back;
   }
 
-  if (cardTotalEl) {
-    cardTotalEl.textContent = cards.length;
+  // Also populate the back face
+  const cardBackEl = studyCardEl?.querySelector(".card-back");
+  if (cardBackEl) {
+    cardBackEl.dataset.content = currentCard.back;
+    cardBackEl.setAttribute("data-text", currentCard.back);
   }
+
+  // Sync flip state visually
+  if (studyCardEl) {
+    if (AppState.ui.isFlipped) {
+      studyCardEl.classList.add("is-flipped");
+    } else {
+      studyCardEl.classList.remove("is-flipped");
+    }
+  }
+
+  if (cardIndexEl) cardIndexEl.textContent = currentIndex + 1;
+  if (cardTotalEl) cardTotalEl.textContent = cards.length;
 
   renderCardList();
 }
@@ -656,28 +671,28 @@ const StudyMode = {
    * Handle keyboard shortcuts
    */
   handleKeyboard(e) {
+    // Don't fire shortcuts if a modal is open or focus is in a text field
+    if (ModalManager.activeModal) return;
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
     const activeDeck = getActiveDeck();
     if (!activeDeck || !this.isActive) return;
 
     switch (e.key) {
       case " ":
-        // Space to flip
         e.preventDefault();
         this.flipCard();
         break;
       case "ArrowLeft":
-        // Left arrow to go to previous card
         e.preventDefault();
         this.previousCard();
         break;
       case "ArrowRight":
-        // Right arrow to go to next card
         e.preventDefault();
         this.nextCard();
         break;
     }
   },
-
   /**
    * Toggle card flip state
    */
