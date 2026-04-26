@@ -720,12 +720,12 @@ function renderCard() {
   const studyCardEl = document.getElementById("study-card");
 
   if (cardTextEl) {
-    cardTextEl.textContent = currentCard.front;
+    cardTextEl.textContent = currentCard.back;
   }
 
   const cardBackTextEl = document.getElementById("card-back-text");
   if (cardBackTextEl) {
-    cardBackTextEl.textContent = currentCard.back;
+    cardBackTextEl.textContent = currentCard.front;
   }
 
   // Also populate the back face

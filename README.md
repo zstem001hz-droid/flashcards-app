@@ -8,9 +8,7 @@
 
 The Felt is a single-page flashcard application built to study Texas Hold'em poker strategy, hand rankings, odds, and table dynamics through an interactive card-flipping interface. The app supports full deck and card management — create, edit, and delete both decks and individual cards — with all data persisted across sessions using the browser's LocalStorage API.
 
-The application was developed using a structured AI-assisted workflow. GitHub Copilot provided inline code suggestions during development, and was
-used for feature scaffolding through targeted seed prompts — pre-written, context-specific prompts designed to generate precise output that integrates directly
-with the existing codebase structure. Each prompt was refined iteratively, reviewed critically, and corrected where the AI produced inconsistent or inaccessible output.
+The application was developed using a structured AI-assisted workflow. GitHub Copilot provided both inline code suggestions and larger feature scaffolding through targeted seed prompts — pre-written, context-specific prompts designed to generate precise output that integrates directly with the existing codebase structure. Each prompt was refined iteratively, reviewed critically, and corrected where the AI produced inconsistent or inaccessible output.
 
 The app ships with four pre-built Texas Hold'em poker decks covering hand rankings and hierarchy, starting hand strategy and win probabilities, pot odds and mathematics, positional play and table dynamics. Additional decks and cards can be created directly within the app and can include any topic that you choose to add to the deck. 
 
@@ -177,10 +175,6 @@ AI-assisted development requires the same critical thinking as writing code manu
 ### AI Bug Identified and Fixed
 
 GitHub Copilot's `ModalManager.closeModal()` used `.bind(this)` inline when calling `removeEventListener`, which creates a new function reference each time and prevents the listener from matching the one added in `openModal` — causing the ESC key handler to leak and accumulate on every modal open. The fix was to store the bound reference as `boundHandleEscKey` on the ModalManager object, assigning it once in `openModal` and passing the same reference to both `addEventListener` and `removeEventListener`.
-
-### Accessibility Improvement Added
-
-Copilot's initial deck list rendered plain `<div>` elements for deck items. These were changed to semantic `<button>` elements inside `<li>` items within a `<ul>`, making the deck list keyboard navigable and correctly announced by screen readers as a list of interactive controls.
 
 ### Prompt Changes That Improved Output
 
