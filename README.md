@@ -12,7 +12,7 @@ The application was developed using a structured AI-assisted workflow. GitHub Co
 used for feature scaffolding through targeted seed prompts — pre-written, context-specific prompts designed to generate precise output that integrates directly
 with the existing codebase structure. Each prompt was refined iteratively, reviewed critically, and corrected where the AI produced inconsistent or inaccessible output.
 
-The app ships with four pre-built Texas Hold'em poker decks covering hand rankings and hierarchy, starting hand strategy and win probabilities, pot odds and mathematics, positional play and table dynamics. Additional decks and cards can be created directly within the app.
+The app ships with four pre-built Texas Hold'em poker decks covering hand rankings and hierarchy, starting hand strategy and win probabilities, pot odds and mathematics, positional play and table dynamics. Additional decks and cards can be created directly within the app and can include any topic that you choose to add to the deck. 
 
 ---
 
@@ -174,17 +174,9 @@ GitHub Copilot consistently applied accessible patterns throughout: native `<dia
 
 AI-assisted development requires the same critical thinking as writing code manually — arguably more, because the output looks complete and correct even when it isn't. The most valuable skill was knowing what questions to ask: does this match the spec, is this accessible, will this cause a memory leak, what is this code actually doing?
 
-### Missing Feature Caught During Review
-
-GitHub Copilot's initial HTML skeleton omitted the New Card button from the toolbar entirely — the layout included Shuffle but not the card creation control required by the app spec. Catching this required reading the generated output critically against the requirements rather than accepting it at face value. The button was added manually with the correct ID, class, and aria-label attributes to match the existing pattern.
-
 ### AI Bug Identified and Fixed
 
 GitHub Copilot's `ModalManager.closeModal()` used `.bind(this)` inline when calling `removeEventListener`, which creates a new function reference each time and prevents the listener from matching the one added in `openModal` — causing the ESC key handler to leak and accumulate on every modal open. The fix was to store the bound reference as `boundHandleEscKey` on the ModalManager object, assigning it once in `openModal` and passing the same reference to both `addEventListener` and `removeEventListener`.
-
-### Code Refactored for Clarity
-
-******
 
 ### Accessibility Improvement Added
 
@@ -204,4 +196,8 @@ Vague prompts like *"create a flashcard app"* produced one large monolithic outp
 
 ## License
 
-ISC
+MIT
+
+### Process Reflection: Design vs. Completion
+
+A significant portion of development time was spent on visual styling and card aesthetic decisions before the core application requirements were fully implemented. Iterating on card back patterns, color schemes, and layout proportions during active development created context-switching overhead and contributed to inefficient use of GitHub Copilot's session rate limits. In hindsight, the correct sequence was to complete all functional requirements first — CRUD, search, shuffle, seed data — then address visual polish as a separate phase. The assignment required working functionality, not visual perfection, and prioritizing aesthetics before completion introduced unnecessary complexity and technical debt during the most critical phase of development.

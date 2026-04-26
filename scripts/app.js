@@ -41,6 +41,143 @@ const AppState = {
 };
 
 /* ========================================
+   Search State - Track active search filter
+   ======================================== */
+
+const SearchState = {
+  query: "",
+  filteredIndices: [], // Indices of cards matching current search
+
+  /**
+   * Reset search state
+   */
+  reset() {
+    this.query = "";
+    this.filteredIndices = [];
+  },
+
+  /**
+   * Update search query and filter results
+   * @param {string} searchQuery - The search term (case-insensitive)
+   */
+  setQuery(searchQuery) {
+    this.query = searchQuery.toLowerCase().trim();
+
+    // Get active deck and cards
+    const activeDeck = getActiveDeck();
+    if (!activeDeck) {
+      this.filteredIndices = [];
+      return;
+    }
+
+    const cards = getCardsInDeck(activeDeck.id);
+
+    // Filter card indices based on search query
+    if (this.query === "") {
+      // No search - show all cards
+      this.filteredIndices = cards.map((_, index) => index);
+    } else {
+      // Search - find matching cards
+      this.filteredIndices = cards
+        .map((card, index) => {
+          const front = card.front.toLowerCase();
+          const back = card.back.toLowerCase();
+          return {
+            index,
+            matches: front.includes(this.query) || back.includes(this.query),
+          };
+        })
+        .filter((item) => item.matches)
+        .map((item) => item.index);
+    }
+  },
+
+  /**
+   * Check if search is active
+   */
+  isActive() {
+    return this.query !== "";
+  },
+
+  /**
+   * Get count of matching results
+   */
+  getMatchCount() {
+    return this.filteredIndices.length;
+  },
+};
+
+/* ========================================
+   Shuffle State - Track shuffled card order
+   ======================================== */
+
+const ShuffleState = {
+  isActive: false,
+  shuffledIndices: [], // Shuffled order of card indices
+
+  /**
+   * Reset shuffle state
+   */
+  reset() {
+    this.isActive = false;
+    this.shuffledIndices = [];
+  },
+
+  /**
+   * Fisher-Yates shuffle algorithm
+   * @param {array} array - Array to shuffle
+   * @returns {array} - Shuffled copy of array
+   */
+  fisherYatesShuffle(array) {
+    const shuffled = [...array]; // Create a copy
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  },
+
+  /**
+   * Shuffle the cards in the active deck
+   */
+  shuffle() {
+    const activeDeck = getActiveDeck();
+    if (!activeDeck) return;
+
+    const cards = getCardsInDeck(activeDeck.id);
+    if (cards.length === 0) return;
+
+    // Get indices to shuffle (considering search filter if active)
+    const indicesToShuffle = SearchState.isActive()
+      ? SearchState.filteredIndices
+      : cards.map((_, index) => index);
+
+    // Shuffle the indices
+    this.shuffledIndices = this.fisherYatesShuffle(indicesToShuffle);
+    this.isActive = true;
+  },
+
+  /**
+   * Get the card index at a given position in the shuffled order
+   * @param {number} position - Position in shuffled list
+   * @returns {number} - Original card index
+   */
+  getCardIndexAt(position) {
+    if (!this.isActive || position >= this.shuffledIndices.length) {
+      return position;
+    }
+    return this.shuffledIndices[position];
+  },
+
+  /**
+   * Get all indices in shuffle order
+   */
+  getIndices() {
+    return this.isActive ? this.shuffledIndices : null;
+  },
+};
+
+/* ========================================
    Deck CRUD Operations
    ======================================== */
 
@@ -316,6 +453,9 @@ function setActiveDeck(deckId) {
     AppState.ui.activeCardIndex = 0;
     AppState.ui.isFlipped = false;
     AppState.save();
+    SearchState.reset();
+    ShuffleState.reset();
+    clearSearchInput();
     return true;
   }
 
@@ -329,6 +469,9 @@ function setActiveDeck(deckId) {
   AppState.ui.activeCardIndex = 0;
   AppState.ui.isFlipped = false;
   AppState.save();
+  SearchState.reset();
+  ShuffleState.reset();
+  clearSearchInput();
 
   return true;
 }
@@ -359,6 +502,7 @@ function initEventListeners() {
   const editCardBtnEl = document.getElementById("edit-card-btn");
   const deleteCardBtnEl = document.getElementById("delete-card-btn");
   const cardListEl = document.getElementById("card-list");
+  const searchInputEl = document.getElementById("search-input");
 
   // Event delegation on deck list
   if (deckListEl) {
@@ -486,6 +630,21 @@ function initEventListeners() {
       StudyMode.nextCard();
     });
   }
+
+  // Search input
+  if (searchInputEl) {
+    searchInputEl.addEventListener("input", (event) => {
+      handleSearch(event.target.value);
+    });
+  }
+
+  // Shuffle button
+  const shuffleBtnEl = document.getElementById("shuffle-btn");
+  if (shuffleBtnEl) {
+    shuffleBtnEl.addEventListener("click", () => {
+      handleShuffle();
+    });
+  }
 }
 
 /**
@@ -541,8 +700,17 @@ function renderCard() {
   if (!activeDeck) return;
 
   const cards = getCardsInDeck(activeDeck.id);
-  const currentIndex = AppState.ui.activeCardIndex;
-  const currentCard = cards[currentIndex];
+
+  // Get the display indices (considering search and shuffle)
+  const displayIndices = ShuffleState.isActive
+    ? ShuffleState.shuffledIndices
+    : SearchState.isActive()
+      ? SearchState.filteredIndices
+      : cards.map((_, index) => index);
+
+  const positionIndex = AppState.ui.activeCardIndex;
+  const actualCardIndex = displayIndices[positionIndex];
+  const currentCard = cards[actualCardIndex];
 
   if (!currentCard) return;
 
@@ -576,9 +744,86 @@ function renderCard() {
     }
   }
 
-  if (cardIndexEl) cardIndexEl.textContent = currentIndex + 1;
-  if (cardTotalEl) cardTotalEl.textContent = cards.length;
+  if (cardIndexEl) cardIndexEl.textContent = positionIndex + 1;
+  if (cardTotalEl) cardTotalEl.textContent = displayIndices.length;
 
+  renderCardList();
+}
+
+/**
+ * Handle search input and filter card list
+ * @param {string} query - Search query string
+ */
+function handleSearch(query) {
+  // Update search state
+  SearchState.setQuery(query);
+
+  // Reset active card index if it's outside filtered results
+  if (SearchState.isActive() && SearchState.filteredIndices.length > 0) {
+    if (!SearchState.filteredIndices.includes(AppState.ui.activeCardIndex)) {
+      AppState.ui.activeCardIndex = SearchState.filteredIndices[0];
+      AppState.ui.isFlipped = false;
+      AppState.save();
+    }
+  }
+
+  // Update search results count display
+  updateSearchResultsCount();
+
+  // Re-render card list with search filter
+  renderCardList();
+
+  // Re-render current card
+  renderCard();
+}
+
+/**
+ * Update the search results count display
+ */
+function updateSearchResultsCount() {
+  const countEl = document.getElementById("search-results-count");
+  if (!countEl) return;
+
+  if (!SearchState.isActive()) {
+    countEl.textContent = "";
+  } else {
+    const matchCount = SearchState.getMatchCount();
+    const activeDeck = getActiveDeck();
+    const totalCards = activeDeck ? getCardsInDeck(activeDeck.id).length : 0;
+    countEl.textContent = ` (${matchCount} of ${totalCards})`;
+  }
+}
+
+/**
+ * Clear the search input field
+ */
+function clearSearchInput() {
+  const searchInputEl = document.getElementById("search-input");
+  if (searchInputEl) {
+    searchInputEl.value = "";
+  }
+}
+
+/**
+ * Handle shuffle button click
+ */
+function handleShuffle() {
+  const activeDeck = getActiveDeck();
+  if (!activeDeck) return;
+
+  const cards = getCardsInDeck(activeDeck.id);
+  if (cards.length === 0) return;
+
+  // Perform the shuffle
+  ShuffleState.shuffle();
+
+  // Reset active card index to 0 and flip state
+  AppState.ui.activeCardIndex = 0;
+  AppState.ui.isFlipped = false;
+  AppState.save();
+
+  // Re-render everything
+  renderCard();
   renderCardList();
 }
 
@@ -593,20 +838,41 @@ function renderCardList() {
   if (!cardListEl) return;
 
   const cards = getCardsInDeck(activeDeck.id);
+
+  // Determine which indices to render (shuffle first, then search)
+  let displayIndices;
+  if (ShuffleState.isActive) {
+    displayIndices = ShuffleState.shuffledIndices;
+    // If search is also active, filter the shuffled list
+    if (SearchState.isActive()) {
+      displayIndices = displayIndices.filter((idx) =>
+        SearchState.filteredIndices.includes(idx),
+      );
+    }
+  } else if (SearchState.isActive()) {
+    displayIndices = SearchState.filteredIndices;
+  } else {
+    displayIndices = cards.map((_, index) => index);
+  }
+
   cardListEl.innerHTML = "";
 
-  cards.forEach((card, index) => {
+  // Render each card at its position in the display order
+  displayIndices.forEach((cardIndex, position) => {
+    const card = cards[cardIndex];
     const li = document.createElement("li");
     li.className = "card-list-item";
 
-    if (index === AppState.ui.activeCardIndex) {
+    // Mark as active if this position matches the current position
+    if (position === AppState.ui.activeCardIndex) {
       li.classList.add("active");
     }
 
     const cardPreview = document.createElement("button");
     cardPreview.className = "card-select-btn";
-    cardPreview.dataset.cardIndex = index;
-    cardPreview.textContent = `${index + 1}. ${card.front.substring(0, 50)}${card.front.length > 50 ? "..." : ""}`;
+    cardPreview.dataset.cardIndex = position; // Store position, not original index
+    cardPreview.dataset.actualIndex = cardIndex; // Store actual card index for reference
+    cardPreview.textContent = `${position + 1}. ${card.front.substring(0, 50)}${card.front.length > 50 ? "..." : ""}`;
 
     const controls = document.createElement("div");
     controls.className = "card-list-controls";
@@ -722,6 +988,13 @@ const StudyMode = {
     const cards = getCardsInDeck(activeDeck.id);
     if (cards.length === 0) return;
 
+    // Get the display indices (considering search and shuffle)
+    const displayIndices = ShuffleState.isActive
+      ? ShuffleState.shuffledIndices
+      : SearchState.isActive()
+        ? SearchState.filteredIndices
+        : cards.map((_, index) => index);
+
     // Boundary check: don't go below 0
     if (AppState.ui.activeCardIndex > 0) {
       AppState.ui.activeCardIndex--;
@@ -743,8 +1016,15 @@ const StudyMode = {
     const cards = getCardsInDeck(activeDeck.id);
     if (cards.length === 0) return;
 
-    // Boundary check: don't go beyond last card
-    if (AppState.ui.activeCardIndex < cards.length - 1) {
+    // Get the display indices (considering search and shuffle)
+    const displayIndices = ShuffleState.isActive
+      ? ShuffleState.shuffledIndices
+      : SearchState.isActive()
+        ? SearchState.filteredIndices
+        : cards.map((_, index) => index);
+
+    // Boundary check: don't go beyond last card in display order
+    if (AppState.ui.activeCardIndex < displayIndices.length - 1) {
       AppState.ui.activeCardIndex++;
     }
 

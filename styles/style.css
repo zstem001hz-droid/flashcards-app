@@ -409,6 +409,16 @@ strong {
    Study Card
    ======================================== */
 
+   .card-face .card-content {
+  position: relative;
+  z-index: 2;
+  color: #1a1a1a;
+  font-size: 18px;
+  text-align: center;
+  padding: var(--spacing-md);
+  width: 100%;
+}
+
 /* ========================================
    Playing Card Styles
    ======================================== */
@@ -422,8 +432,8 @@ strong {
 .study-card {
   position: relative;
   width: 100%;
-  max-width: 300px;
-  aspect-ratio: 2.5 / 3.5;
+  max-width: 400px;
+  aspect-ratio: 3.5 / 2.5;
   cursor: pointer;
   transform-style: preserve-3d;
   transition:
@@ -474,16 +484,12 @@ strong {
 
 /* Back face (rotated 180 degrees, hidden by default) */
 .card-back {
-  background: linear-gradient(
-    45deg,
-    #c41e3a 0%,
-    #c41e3a 25%,
-    #ffffff 25%,
-    #ffffff 50%,
-    #c41e3a 50%,
-    #c41e3a 75%,
-    #ffffff 75%,
-    #ffffff 100%
+  background: repeating-linear-gradient(
+   45deg,
+    #c89b9b,
+    #5b23b7 5px,
+    #1d84b0 5px,
+    #1e7fc4 10px
   );
   background-size: 40px 40px;
   border: 2px solid #c41e3a;
@@ -519,15 +525,15 @@ strong {
 }
 
 .card-back::after {
-  content: "♠ ♥ ♣ ♦";
+  content: "♠ ♥ ♣ ♦"; /* Card suit pattern on the back */
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 48px;
-  color: rgba(196, 30, 58, 0.3);
+  font-size: 36px;
+  color: rgba(255, 255, 255, 0.85);
   font-weight: bold;
-  letter-spacing: 8px;
+  letter-spacing: 12px;
   z-index: 1;
 }
 
@@ -763,14 +769,6 @@ strong {
   background-color: #c44444;
 }
 
-/* ========================================
-   Card Controls
-   ======================================== */
-
-/* ========================================
-   Buttons
-   ======================================== */
-
 .btn {
   padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
@@ -987,6 +985,8 @@ strong {
 .hidden {
   display: none !important;
 }
+
+
 
 /* ========================================
    Responsive Design

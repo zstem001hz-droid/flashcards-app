@@ -77,7 +77,9 @@
             <div class="card-wrapper">
               <div id="study-card" class="study-card" aria-label="Study card">
                 <div class="card-face">
-                  <p id="card-text">Select a deck to begin</p>
+                  <div class="card-content">
+                    <p id="card-text"></p>
+                  </div>
                 </div>
                 <div class="card-back">
                   <div class="card-content">
@@ -136,7 +138,13 @@
 
             <!-- Card List -->
             <div class="card-list-section">
-              <h3>Cards in Deck</h3>
+              <h3>
+                Cards in Deck
+                <span
+                  id="search-results-count"
+                  class="search-results-count"
+                ></span>
+              </h3>
               <ul id="card-list" class="card-list">
                 <!-- Cards will be rendered here -->
               </ul>
