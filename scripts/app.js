@@ -640,6 +640,8 @@ const ModalManager = {
     }
   },
 
+  boundHandleEscKey: null,
+
   /**
    * Open a modal with focus management
    */
@@ -662,7 +664,8 @@ const ModalManager = {
 
     // Add event listeners
     modal.addEventListener("keydown", (e) => this.trapFocus(e, modal));
-    document.addEventListener("keydown", this.handleEscKey.bind(this));
+    this.boundHandleEscKey = this.handleEscKey.bind(this);
+    document.addEventListener("keydown", this.boundHandleEscKey);
   },
 
   /**
@@ -682,7 +685,7 @@ const ModalManager = {
     }
 
     // Remove event listeners
-    document.removeEventListener("keydown", this.handleEscKey.bind(this));
+    document.removeEventListener("keydown", this.boundHandleEscKey);
   },
 };
 
