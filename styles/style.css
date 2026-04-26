@@ -412,27 +412,33 @@ strong {
 .suit-corner {
   position: absolute;
   font-size: 44px;
-  color: rgba(255, 255, 255, 0.85);
   font-weight: bold;
   line-height: 1;
   z-index: 3;
 }
 
 .suit-top-left {
-  top: 10px;
-  left: 12px;
+  color: rgba(0, 0, 0, 0.75);
+  top: 14px;
+  left: 40px;
 }
+
 .suit-top-right {
-  top: 10px;
-  right: 12px;
+  color: rgba(196, 30, 58, 0.85);
+  top: 14px;
+  right: 40px;
 }
+
 .suit-bottom-left {
-  bottom: 10px;
-  left: 12px;
+  color: rgba(196, 30, 58, 0.85);
+  bottom: 20px;
+  left: 40px;
 }
+
 .suit-bottom-right {
-  bottom: 10px;
-  right: 12px;
+  color: rgba(0, 0, 0, 0.75);
+  bottom: 20px;
+  right: 40px;
 }
 
 .card-face .card-content {
