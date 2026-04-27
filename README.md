@@ -1,6 +1,6 @@
 # 🃏 The Felt — Texas Hold'em Flashcards
 
-**The Felt** is a browser-based flashcard study app built with vanilla JavaScript, HTML, and CSS — no frameworks, no dependencies. Inspired by Texas Hold'em poker, it features a dark green felt surface, 54-card deck aesthetics, and a playing card flip mechanic that makes hand rankings and strategy feel like you're actually sitting at the tables.
+**The Felt** is a browser-based flashcard study app built with vanilla JavaScript, HTML, and CSS — no frameworks, no dependencies. Inspired by Texas Hold'em poker, it features a dark green felt surface, 52-card deck aesthetics, and a playing card flip mechanic that makes hand rankings and strategy feel like you're actually sitting at the tables.
 
 ---
 
@@ -39,6 +39,8 @@ The app ships with four pre-built Texas Hold'em poker decks covering hand rankin
 - **Responsive Layout** — Two-column sidebar/main layout on desktop, single column on mobile
 - **Dark Mode** — Felt-themed dark green color scheme with `prefers-color-scheme` support
 - **Empty States** — Contextual messages for no decks and no cards conditions
+- **Pre-loaded Content** — Ships with 52 Texas Hold'em poker flashcards across 4 thematic decks, auto-loaded on first visit
+- **Mobile Responsive** — Sidebar adapts to mobile layout, deck switching available on all screen sizes
 
 ---
 
@@ -180,18 +182,28 @@ GitHub Copilot's `ModalManager.closeModal()` used `.bind(this)` inline when call
 
 Vague prompts like *"create a flashcard app"* produced one large monolithic output that skipped accessibility and missed requirements. Targeted prompts that referenced specific element IDs from the existing HTML (e.g., *"using the existing dialog elements deck-modal and card-modal from index.html"*) produced code that plugged directly into the existing structure without conflicts. Including the `.github/copilot-instructions.md` context file meant Copilot consistently used the correct class naming convention, file paths, and data model without needing to re-state them in every prompt.
 
+### Process Reflection: Design vs. Completion
+
+A significant portion of development time was spent on visual styling and card aesthetic decisions before the core application requirements were fully implemented. Iterating on card back patterns, color schemes, suit corner placement, and layout proportions during active development created context-switching overhead and contributed to inefficient use of GitHub Copilot's session rate limits. In hindsight, the correct sequence was to complete all functional requirements first — CRUD, search, shuffle, seed data — then address visual polish as a separate phase. The assignment required working functionality, not visual perfection, and prioritizing aesthetics before completion introduced unnecessary complexity during the most critical phase of development.
+
+### Tool Constraints Encountered
+
+GitHub Copilot's session-based rate limiting was a significant workflow constraint throughout this project. Rate limits are calculated by volume of code generated rather than number of prompts — Agent mode in particular consumes quota rapidly because it reads files, writes changes, runs browser verification, and takes screenshots autonomously. Multiple sessions hit the limit mid-development, requiring 4+ hour waits before continuing. This reinforced the importance of writing precise, focused prompts that accomplish maximum functionality per session rather than broad exploratory prompts that generate large volumes of code. Planning prompt sequencing in advance would have significantly reduced rate limit impact.
+
+### Code Refactored for Clarity
+
+The initial card flip implementation used a CSS keyframe animation (`@keyframes flip` rotating 360 degrees) that produced a spinning effect rather than a true card reveal. This was identified as incorrect before acceptance and replaced with a proper CSS 3D flip using `transform-style: preserve-3d`, `backface-visibility: hidden`, and `rotateY(180deg)` on the `.card-back` face. The JavaScript `flipCard()` method was simultaneously refactored from adding a temporary `.flip-animation` class to toggling an `.is-flipped` class that persists the visual state correctly.
+
 ---
 
-## Author
+## Built by
 
 **Zac White**
+
+[![GitHub](https://img.shields.io/badge/GitHub-zstem001hz--droid-181717?logo=github)](https://github.com/zstem001hz-droid)
 
 ---
 
 ## License
 
 MIT
-
-### Process Reflection: Design vs. Completion
-
-A significant portion of development time was spent on visual styling and card aesthetic decisions before the core application requirements were fully implemented. Iterating on card back patterns, color schemes, and layout proportions during active development created context-switching overhead and contributed to inefficient use of GitHub Copilot's session rate limits. In hindsight, the correct sequence was to complete all functional requirements first — CRUD, search, shuffle, seed data — then address visual polish as a separate phase. The assignment required working functionality, not visual perfection, and prioritizing aesthetics before completion introduced unnecessary complexity and technical debt during the most critical phase of development.
