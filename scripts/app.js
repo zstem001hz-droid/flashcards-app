@@ -1853,6 +1853,7 @@ function seedDefaultDecks() {
   });
 
   // Save all decks to localStorage
+  AppState.activeDeckId = deck1.id;
   AppState.save();
 }
 

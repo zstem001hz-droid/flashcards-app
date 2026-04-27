@@ -22,7 +22,7 @@ The app ships with four pre-built Texas Hold'em poker decks covering hand rankin
 
 ## Live Demo
 
-> *Add GitHub Pages link here after deployment*
+[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen?logo=github)](https://zstem001hz-droid.github.io/flashcards-app/)
 
 ---
 
