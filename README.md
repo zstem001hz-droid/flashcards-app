@@ -16,7 +16,7 @@ The app ships with four pre-built Texas Hold'em poker decks covering hand rankin
 
 ## Screenshot
 
-> *Add a screenshot here after the UI is complete*
+<img src="TheFelt-Flash.png" alt="The Felt - Texas Hold'em Flashcards" width="600" />
 
 ---
 
