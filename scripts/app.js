@@ -1568,10 +1568,300 @@ function deleteCardWithConfirmation(cardId) {
    ======================================== */
 
 /**
+ * Seed default decks with poker content on first load
+ * Only runs when LocalStorage is empty
+ */
+function seedDefaultDecks() {
+  // Only seed if no decks exist
+  if (AppState.decks.length > 0) return;
+
+  // Helper function to create a unique ID
+  let idCounter = 0;
+  const generateUniqueId = () => {
+    return `deck-${Date.now()}-${idCounter++}`;
+  };
+
+  // Manually create decks with unique IDs to avoid ID collisions
+  const createDeckManually = (name) => {
+    const deckId = generateUniqueId();
+    const newDeck = {
+      id: deckId,
+      name: name.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    AppState.decks.push(newDeck);
+    AppState.cardsByDeckId[deckId] = [];
+    return newDeck;
+  };
+
+  // Deck 1: Hand Rankings & Hierarchy
+  const deck1 = createDeckManually("Hand Rankings & Hierarchy");
+  const deck1Cards = [
+    {
+      front: "What is the highest hand ranking in Texas Hold'em?",
+      back: "Royal Flush - A, K, Q, J, 10 all of the same suit. The absolute best hand possible.",
+    },
+    {
+      front: "How does a Straight Flush rank compared to Four of a Kind?",
+      back: "Straight Flush beats Four of a Kind. Straight Flush is 2nd highest, Four of a Kind is 7th.",
+    },
+    {
+      front: "What is the difference between a Flush and a Straight?",
+      back: "Flush: any 5 cards of the same suit (not in sequence). Straight: any 5 cards in sequence (different suits). Flush ranks higher (6th vs 5th).",
+    },
+    {
+      front: "Can you have Two Pair and also have a Full House?",
+      back: "No, these are mutually exclusive hands. Two Pair = 2 different pairs + 1 kicker. Full House = 3-of-a-kind + pair (ranks higher).",
+    },
+    {
+      front: "How many different ways can you make a Pair?",
+      back: "You need exactly 2 cards of the same rank + 3 unrelated cards. Total 1.3M combinations. Pair ranks 9th (near the bottom).",
+    },
+    {
+      front: "What beats a Flush?",
+      back: "Full House, Four of a Kind, Straight Flush, and Royal Flush. Flush ranks 6th overall.",
+    },
+    {
+      front: "When do two players have a 'kicker' situation?",
+      back: "When both have the same main hand (pair, two pair, etc.), the remaining cards (kickers) determine the winner. Higher kickers win.",
+    },
+    {
+      front: "What is High Card and when does it win?",
+      back: "High Card means no pairs, straights, or flushes - just the highest card. Ranks 10th (lowest). Wins if no one else has any hand.",
+    },
+    {
+      front:
+        "Rank these hands from strongest to weakest: Straight, Flush, Three of a Kind",
+      back: "Strongest to weakest: Flush (6th), Straight (5th), Three of a Kind (8th). Flush is strongest of these three.",
+    },
+    {
+      front: "What is the minimum hand strength to win a showdown?",
+      back: "Any hand. In a showdown, the best 5-card hand wins. Even High Card can win if everyone else folds.",
+    },
+    {
+      front: "Does suit matter in hand rankings?",
+      back: "No. In Texas Hold'em, all suits are equal value. A Royal Flush in hearts ties with a Royal Flush in diamonds.",
+    },
+    {
+      front: "What is the second-best possible hand in Texas Hold'em?",
+      back: "Straight Flush (specifically King-high Straight Flush). A Royal Flush is A-high Straight Flush.",
+    },
+    {
+      front: "How many cards make up your final hand in Texas Hold'em?",
+      back: "Exactly 5 cards. You use your best 5-card combination from the 7 available (2 hole cards + 5 community cards).",
+    },
+  ];
+
+  deck1Cards.forEach(({ front, back }) => {
+    createCard(deck1.id, front, back);
+  });
+
+  // Deck 2: Starting Hands, Statistics & Win Probabilities
+  const deck2 = createDeckManually(
+    "Starting Hands, Statistics & Win Probabilities",
+  );
+  const deck2Cards = [
+    {
+      front:
+        "What are the best starting hands (premium hands) in Texas Hold'em?",
+      back: "AA, KK, QQ, JJ (premium pairs) and AK, AQ (broadway). These win money long-term from any position.",
+    },
+    {
+      front: "How often does AA win vs two random hands preflop?",
+      back: "AA wins approximately 85% of the time preflop. It's the strongest starting hand and heavily favored over any two cards.",
+    },
+    {
+      front: "What is position and why does it matter in poker?",
+      back: "Position is your seat relative to the dealer. Late position (closer to button) is better - you act last and have more information. Early position is worst.",
+    },
+    {
+      front: "Can you play looser (more hands) in late position? Why?",
+      back: "Yes. In late position, you have information from other players' actions. You can profitably play weaker hands because you act last and see reactions.",
+    },
+    {
+      front:
+        "What percentage of hands should you play from early position vs late position?",
+      back: "Early position: ~15-20% best hands only. Late position: ~40-50% wider range. Position dramatically affects hand selection.",
+    },
+    {
+      front: "What is pocket pair strategy preflop?",
+      back: "Small pairs (22-66): play for set value, need good odds. Medium pairs (77-99): can raise. High pairs (TT-AA): always raise. Depends on position and action.",
+    },
+    {
+      front: "Why is AK considered strong preflop but struggles postflop?",
+      back: "AK is premium preflop (unpaired - 'Big Slick') but is still just Ace-high without a pair. It wins 65%+ preflop but needs to connect with the board.",
+    },
+    {
+      front:
+        "What is the probability of hitting a pair or better with AK on the flop?",
+      back: "Approximately 32-33%. AK will flop a pair or stronger only about 1 in 3 times, so it's vulnerable on unpaired boards.",
+    },
+    {
+      front: "Which hands should you avoid playing from early position?",
+      back: "Weak broadway (KJ, QT, JT), weak aces (A9, A8), small pairs, and all unsuited trash hands. Position is too poor to justify the risk.",
+    },
+    {
+      front: "What does 'under the gun' mean and how should you play there?",
+      back: "UTG is first to act preflop (after the big blind). Play only the strongest 12-15% of hands: premium pairs and premium broadway (AA-TT, AK, AQ).",
+    },
+    {
+      front:
+        "How does the Button position advantage translate to long-term profit?",
+      back: "Button wins money long-term because: 1) You act last preflop and postflop 2) Information advantage 3) Can steal blinds more profitably. Play wider from button.",
+    },
+    {
+      front:
+        "What's the difference between 'in the money' and 'short-stacked' thinking?",
+      back: "'In the money' = cash game, stack size relative to blinds. 'Short-stacked' = have few chips left to play with. Each requires different strategy.",
+    },
+    {
+      front: "At what preflop odds should you fold a pair against a raise?",
+      back: "Depends on pair strength and position. Small pair (22-66) often folds to 3-bet. Medium/high pairs usually call or reraise to maintain aggression.",
+    },
+  ];
+
+  deck2Cards.forEach(({ front, back }) => {
+    createCard(deck2.id, front, back);
+  });
+
+  // Deck 3: Pot Odds, Outs & Math
+  const deck3 = createDeckManually("Pot Odds, Outs & Math");
+  const deck3Cards = [
+    {
+      front: "What are pot odds and why should you calculate them?",
+      back: "Pot odds = the ratio of pot size to your bet size. You compare them to your hand's winning probability to decide: if odds > probability, it's profitable to call.",
+    },
+    {
+      front: "You need to call $10 into a $40 pot. What are your pot odds?",
+      back: "4 to 1 (or 4:1). The pot is $40, you bet $10, so you're getting $40 to $10, which simplifies to 4:1. You need ~20% equity to break even.",
+    },
+    {
+      front: "What is an 'out' in poker?",
+      back: "An out is a card that will likely make you a winning hand. Example: You have 4 to a flush (9 outs), 4 to a straight (8 outs). Count outs to estimate equity.",
+    },
+    {
+      front: "How many outs does a flush draw have?",
+      back: "9 outs. You have 4 cards of a suit and need 1 more. There are 13 cards of each suit, so 13 - 4 = 9 remaining to make the flush.",
+    },
+    {
+      front: "How many outs does an open-ended straight draw have?",
+      back: "8 outs. You need one of two cards on either end (4 cards each = 8 total). Example: holding 5-6-7-8 needs a 4 or 9.",
+    },
+    {
+      front: "What is the 'rule of 4' and 'rule of 2' in poker?",
+      back: "'Rule of 4' (preflop to river): outs × 4 ≈ equity %. 'Rule of 2' (turn to river): outs × 2 ≈ equity %. Quick approximation tools.",
+    },
+    {
+      front:
+        "You have a flush draw with 9 outs. Using the Rule of 4, what's your equity?",
+      back: "9 outs × 4 = 36% equity. Actually closer to 35%, but Rule of 4 gives quick approximation from preflop or flop to river.",
+    },
+    {
+      front: "What is 'implied odds'?",
+      back: "Implied odds are the pot odds adjusted for money you expect to win on future streets. Call a slightly negative pot odds bet if you expect to win extra chips later.",
+    },
+    {
+      front:
+        "You have a gutshot straight draw (4 outs) and a flush draw (9 outs). How many total outs?",
+      back: "Not 13. Usually 11-12 because the cards might overlap (some cards make both). Count carefully: gutshot needs specific ranks, flush needs specific suits.",
+    },
+    {
+      front:
+        "What percentage equity do you need to call a bet with 6 outs on the turn?",
+      back: "Using Rule of 2: 6 outs × 2 = 12% equity. You need the pot odds to offer 8:1 to break even (100% / 12% = 8.33).",
+    },
+    {
+      front: "How do you calculate equity in an all-in situation?",
+      back: "Count your outs, use Rule of 4 (to river) or Rule of 2 (turn to river). Or use equity calculators. Equity = outs × applicable rule.",
+    },
+    {
+      front: "What is expected value (EV)?",
+      back: "EV = (% equity × pot amount) - (% opponent wins × your bet). Positive EV is profitable long-term. All profitable calls have positive EV.",
+    },
+    {
+      front:
+        "A $100 pot. Opponent bets $50. You have 30% equity and need to call $50. Should you call?",
+      back: "EV = (0.30 × $150) - (0.70 × $50) = $45 - $35 = +$10 EV. Yes, call it. Positive EV is profitable.",
+    },
+  ];
+
+  deck3Cards.forEach(({ front, back }) => {
+    createCard(deck3.id, front, back);
+  });
+
+  // Deck 4: Position & Table Dynamics
+  const deck4 = createDeckManually("Position & Table Dynamics");
+  const deck4Cards = [
+    {
+      front:
+        "What are the six main table positions in order from best to worst?",
+      back: "Button (best), Small Blind (SB), Big Blind (BB), Under the Gun (UTG/Early), Middle Position, Hijack. Button acts last, UTG acts first preflop (except blinds).",
+    },
+    {
+      front: "What is 'small blind' position and how should you play there?",
+      back: "Small Blind: between big blind and button. You're second-to-last preflop but first postflop. Play strong hands primarily. Can steal against weak big blinds.",
+    },
+    {
+      front: "What is 'big blind' position and what's your strategy?",
+      back: "Big Blind: last to act preflop (already posted). Check or raise if attacked. Defend your blind (fold less) because you've already invested. Aggressive postflop.",
+    },
+    {
+      front: "Why do players 'steal the blinds' from the button?",
+      back: "Button has best position. Raise with wider range preflop. Blinds likely fold weak hands because they're out of position. Steal free chips when it folds to you.",
+    },
+    {
+      front: "What is the 'squeeze play'?",
+      back: "3-bet when someone raises and others call. You're 'squeezing' multiple opponents with position. They fold frequently, winning the pot immediately.",
+    },
+    {
+      front: "Why is 'acting last' an advantage in every street?",
+      back: "You see all opponents' actions first. Information advantage: You know their hand strength signals, can adjust your betting, and make better decisions.",
+    },
+    {
+      front: "How does table image affect your decisions?",
+      back: "Tight image: bluffs get respect. Loose image: value bets get called more. Adjust: play more bluffs when tight, more strong hands when loose for maximum value.",
+    },
+    {
+      front:
+        "What should you do when an aggressive player is stealing from the button?",
+      back: "Tighten your big blind defense range but play strong hands harder. 3-bet premium hands. Don't fold everything, but don't call with garbage either. Adapt.",
+    },
+    {
+      front: "What is a 'good table' vs 'tough table'?",
+      back: "'Good table': many loose/passive players, bad poker skills, deep stacks. Profitable. 'Tough table': skilled/tight players, shallow stacks, competitive. Leave if possible.",
+    },
+    {
+      front: "How do you identify a weak player at the table?",
+      back: "Plays too many hands, calls too much, raises predictably, doesn't adjust positions, acts out of turn, gives away information. Target these players for value.",
+    },
+    {
+      front: "Why should you avoid 'tilt' when you're out of position?",
+      back: "Out of position already disadvantageous (act first postflop). Tilt + poor position = terrible decisions. Stay calm. Make disciplined folds. Good positions give tilt recovery.",
+    },
+    {
+      front: "What is 'seat selection' and why do professionals prioritize it?",
+      back: "Choose seats with weaker players on your right (so they act before you) and stronger players on your left. Maximizes your positional advantage against weak play.",
+    },
+    {
+      front: "How do you counter an overly aggressive player?",
+      back: "Play tighter from early position, 3-bet more often to build pots, value-bet thinner, allow them to bluff-catch themselves. Don't get baited into overplaying.",
+    },
+  ];
+
+  deck4Cards.forEach(({ front, back }) => {
+    createCard(deck4.id, front, back);
+  });
+
+  // Save all decks to localStorage
+  AppState.save();
+}
+
+/**
  * Initialize the application
  */
 function initApp() {
   AppState.init();
+  seedDefaultDecks();
   renderDeckList();
   initEventListeners();
   updateUIForActiveDeck();
